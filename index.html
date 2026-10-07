@@ -4,6 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#0b1020">
+  <!-- csp:start --><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-+mly31C+QQSAeXrtrKLIXFjPzAin+3Nu2O5/lqJcZv8='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'"><!-- csp:end -->
+  <meta name="referrer" content="no-referrer">
   <title>Pixel Realms</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -22,6 +24,7 @@
       <div class="chip pass" title="Battle pass progress"><span id="passTier">T0</span><div id="passBar" class="bar"><i></i></div></div>
     </div>
     <button id="btnPause" class="iconbtn" aria-label="Pause">❚❚</button>
+    <button id="btnRec" class="iconbtn" aria-label="Record clip">⏺</button>
     <div id="royaleHud" class="hidden">
       <div class="chip" id="rAlive">👥 8</div>
       <div class="chip" id="rStorm">🌀 --</div>

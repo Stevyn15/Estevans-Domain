@@ -45,7 +45,7 @@ export function rollLoot({ luck = 0, supply = false } = {}) {
 export class Royale {
   constructor(game) {
     this.game = game; this.beams = new Map(); this.bots = []; this.kills = 0; this.ended = false;
-    this.feedT = 0; this.stormTick = 0; this.fightT = 30;
+    this.feedT = 0; this.startedAt = performance.now(); this.stormTick = 0; this.fightT = 30;
     this.center = new THREE.Vector2(0, 0); this.radius = ARENA_R;
     this.phase = -1; this.state = 'calm'; this.t = 25;
     this.nextCenter = new THREE.Vector2(0, 0); this.nextRadius = ARENA_R; this.fromC = new THREE.Vector2(); this.fromR = ARENA_R;
@@ -226,7 +226,7 @@ export class Royale {
     const xp = 40 + this.kills * 15 + (win ? 100 : 0), coins = 20 + this.kills * 10 + (win ? 150 : 0);
     addXP(xp); addCoins(coins);
     g.dead = true; g.keys.clear(); g.mouse = [false, false, false]; g.touch.mine = false; document.exitPointerLock?.();
-    setTimeout(() => g.hooks.onResults?.({ win, place, kills: this.kills, xp, coins }), win ? 600 : 300);
+    setTimeout(() => g.hooks.onResults?.({ win, place, kills: this.kills, xp, coins, time: Math.round((performance.now() - this.startedAt) / 1000), daily: g.meta?.daily || 0 }), win ? 600 : 300);
   }
 
   dispose() {

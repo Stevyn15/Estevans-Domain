@@ -46,7 +46,7 @@ export class Game {
     this.hooks = {};
     this.particles = [];
     this.mobs = [];
-    this.clock = new THREE.Clock();
+    let last = performance.now(); this.clock = { getDelta: () => { const n = performance.now(), d = (n - last) / 1000; last = n; return d; } };
     this.locked = false;
     this.isTouch = false;
     this.outline = new THREE.LineSegments(

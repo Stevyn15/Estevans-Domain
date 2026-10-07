@@ -14,18 +14,49 @@ const defaults = () => ({
   quests: { date: today(), prog: {}, done: {} },
   settings: { renderDist: 4, sens: 1, fov: 72, touch: 'auto' },
   receipts: [],
+  consent: null,                       // { version, ts, analytics } — see privacy.js
+  streak: { last: null, count: 0 },
+  refCode: null, refRedeemed: null,
+  daily: { n: 0, best: null },
 });
 
 const listeners = new Set();
 export const onProfileChange = (fn) => { listeners.add(fn); return () => listeners.delete(fn); };
 
-export const profile = Object.assign(defaults(), store.get(KEY, {}));
+// ---- tamper-evident save -------------------------------------------------------------------
+// A checksum catches corruption and casual edits (e.g. someone changing coins in dev tools). It is NOT
+// real protection: anything on the device can be edited. Real-money entitlements must be re-validated
+// server-side (docs/SECURITY.md). On mismatch we fall back to a safe state rebuilt from receipts.
+const SALT = 'pr.v1.integrity';
+function fnv(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); }
+const sign = (o) => { const { _sig, ...rest } = o; return fnv(JSON.stringify(rest) + SALT); };
+
+function loadProfile() {
+  const raw = store.get(KEY, null);
+  if (!raw || typeof raw !== 'object') return defaults();
+  if (raw._sig && raw._sig !== sign(raw)) {
+    const safe = defaults(); safe.tamperedAt = Date.now();
+    if (['child', 'teen', 'adult'].includes(raw.ageGroup)) safe.ageGroup = raw.ageGroup;
+    if (Array.isArray(raw.receipts)) {
+      safe.receipts = raw.receipts.filter((r) => PRODUCTS[r?.productId]);
+      for (const r of safe.receipts) {
+        const g = PRODUCTS[r.productId].grants;
+        if (g.premium) safe.premium = true;
+        (g.perks || []).forEach((k) => { safe.perks[k] = true; });
+        (g.skins || []).forEach((k) => { if (!safe.ownedSkins.includes(k)) safe.ownedSkins.push(k); });
+      }
+    }
+    return safe;
+  }
+  return Object.assign(defaults(), raw);
+}
+export const profile = loadProfile();
 profile.settings = Object.assign(defaults().settings, profile.settings);
 profile.claimed = Object.assign({ free: [], premium: [] }, profile.claimed);
 
 let saveTimer = 0;
 export function save(now = false) {
-  const run = () => { store.set(KEY, profile); listeners.forEach((f) => f(profile)); };
+  const run = () => { profile._sig = sign(profile); store.set(KEY, profile); listeners.forEach((f) => f(profile)); };
   if (now) return run();
   clearTimeout(saveTimer); saveTimer = setTimeout(run, 400);
 }

@@ -40,11 +40,36 @@ js/ui.js                       every menu screen and overlay
 js/easter.js                   secrets
 scripts/smoke.mjs              headless Chromium smoke test (needs playwright)
 docs/STORE_AND_MARKETING.md    what you need to ship + advertise this (READ THIS)
+docs/VIRAL_IDEAS.md            growth ideas ranked by effort, with status
+docs/SECURITY.md, PRIVACY.md   threat model, controls, known gaps, data map, store-form answers
+js/viral.js, native.js, privacy.js, analytics.js, config.js   shareable features, native bridge, data rights, consent-gated analytics
+mobile/                        Expo app (WebView shell + native bridge)
 ```
 
 **Adding a purchasable boost:** add it to `PERKS` in `catalog.js`, read it in `profile.stats()`, use the stat in `game.js`. The shop lists it automatically.
 **Adding a skin:** add an entry to `SKINS` in `skins.js` (colours + optional `paint` function + `hat`).
 **Adding a battle pass season:** edit `BP`, `buildTiers()` in `catalog.js`.
+
+## Mobile app (React Native + Expo) — same repo, one codebase
+
+`mobile/` is an Expo (React Native) app that bundles the game into a single offline HTML file and runs it in a locked-down WebView, with a **validated native bridge** for purchases (store seam), share sheet, haptics, deep links, secure storage and clip sharing. The game code in `js/` is the single source of truth for both web and mobile.
+
+```bash
+cd mobile
+npm install                 # first time only
+npm start                   # builds the game bundle, then starts Expo — scan the QR with the Expo Go app,
+                            # or press i / a for the iOS simulator / Android emulator
+npm run typecheck && npm test
+```
+You need Node 20+ (22 recommended). For App Store / Play builds use [EAS Build](https://docs.expo.dev/build/introduction/): `npx eas-cli build --platform all` (requires an Expo account and your Apple/Google developer accounts). Edit `bundleIdentifier`/`package` in `mobile/app.json` first.
+`Expo Go` is fine for the MVP; the native modules used (WebView, haptics, sharing, secure-store…) are all included in it.
+
+New in this layer: **Daily Challenge, share-result, 15s clip recorder, daily streak, invite codes, deep links** (`docs/VIRAL_IDEAS.md`), plus the **age gate + consent, Privacy & Data screen (export / delete), CSP, tamper-evident saves and bridge validation** (`docs/SECURITY.md`, `docs/PRIVACY.md`).
+
+```bash
+npm test                    # (repo root) security/privacy unit tests
+npm run csp                 # regenerate the CSP hash after editing the import map
+```
 
 ## Important: purchases are simulated
 `payments.js` uses a `TestProvider` that shows a confirm sheet and grants the item. **No money moves.** See `docs/STORE_AND_MARKETING.md` for wiring Apple/Google in-app purchases and server-side receipt validation before launch.

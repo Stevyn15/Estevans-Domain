@@ -14,13 +14,18 @@ import {
   buySkinWithCoins, canClaim, claim, claimAll, unclaimedCount, questState, onProfileChange,
 } from './profile.js';
 import { logoTap } from './easter.js';
+import { APP } from './config.js';
+import { openLink, shareFile, onNativeEvent } from './native.js';
+import { recordConsent, setAnalyticsConsent, exportData, deleteAllData, needsConsent } from './privacy.js';
+import { dailyMeta, dailyNumber, recordDaily, shareResult, claimStreak, myRefCode, redeemRefCode, shareInvite, referralsAllowed, parseDeepLink, startClip, stopClip, isRecording, shareClip } from './viral.js';
+import { track } from './analytics.js';
 
 const root = () => $('#ui');
 const WORLDS_KEY = 'pixelrealms.worlds';
 const SAVE_PREFIX = 'pixelrealms.world.';
 const MODE_LABEL = { survival: 'Survival', creative: 'Creative', royale: 'Storm Royale' };
 
-let game, cur = 'title', shopTab = 'featured', invSel = null, preview = null, newMode = 'survival';
+let pendingRef = null, game, cur = 'title', shopTab = 'featured', invSel = null, preview = null, newMode = 'survival';
 
 // ------------------------------------------------------------------ helpers
 const worlds = () => store.get(WORLDS_KEY, []);
@@ -52,11 +57,13 @@ const closeModal = () => $$('.modal', root()).forEach((m) => m.remove());
 // ------------------------------------------------------------------ screens
 const screens = {
   agegate() {
-    return [`<div style="margin:auto;width:min(380px,92vw);text-align:center"><h1 class="logo" style="font-size:24px">PIXEL<br><b>REALMS</b></h1>
-      <div class="panel"><p style="font-size:10px">Before you play, what year were you born?</p>
+    return [`<div style="margin:auto;width:min(400px,92vw);text-align:center"><h1 class="logo" style="font-size:24px">PIXEL<br><b>REALMS</b></h1>
+      <div class="panel"><p style="font-size:10px">What year were you born?</p>
       <input type="text" id="birthYear" inputmode="numeric" maxlength="4" placeholder="YYYY" style="text-align:center;font-size:16px">
-      <p style="font-size:8px;color:var(--dim)">We only use this to choose age-appropriate settings (for example, purchases are turned off for players under 13). We don't store your birth year.</p>
-      <button class="btn green" data-act="ageOk">CONTINUE</button></div></div>`, 'title'];
+      <p style="font-size:8px;color:var(--dim)">Used only to pick age-appropriate settings (e.g. purchases, sharing and invites are off for players under 13). We do not store your birth year.</p>
+      <label class="check"><input type="checkbox" id="agreeTos"> <span>I agree to the <a href="#" data-act="link" data-arg="${APP.termsUrl}">Terms</a> and <a href="#" data-act="link" data-arg="${APP.privacyUrl}">Privacy Policy</a></span></label>
+      <label class="check"><input type="checkbox" id="optAnalytics"> <span>Optional: share anonymous usage stats to help improve the game (never for under 13s)</span></label>
+      <button class="btn green" data-act="ageOk" style="margin-top:12px">CONTINUE</button></div></div>`, 'title'];
   },
   title() {
     const ub = unclaimedCount();
@@ -65,12 +72,13 @@ const screens = {
       <div class="tagline">BUILD · SURVIVE · LAST ONE STANDING</div>
       <div class="menu">
         <button class="btn green" data-act="go" data-arg="worlds">▶ PLAY</button>
+        <button class="btn" style="background:#8b5cf6;box-shadow:inset -3px -3px 0 #5b34b0" data-act="daily">🔥 DAILY CHALLENGE #${dailyNumber()}${profile.daily.n === dailyNumber() && profile.daily.best ? `<span class="badge" style="background:#2e7d4f">BEST #${profile.daily.best.place}</span>` : ''}</button>
         <button class="btn" data-act="go" data-arg="skins">SKINS &amp; LEGENDS</button>
         <button class="btn gold" data-act="go" data-arg="pass">BATTLE PASS${ub ? `<span class="badge">${ub}</span>` : ''}</button>
         <button class="btn" data-act="go" data-arg="shop">SHOP</button>
         <button class="btn" data-act="go" data-arg="settings">SETTINGS</button>
       </div>
-      <div class="tagline" style="margin-top:22px">v0.1 prototype · 🪙 ${profile.coins.toLocaleString()}</div>`, 'title'];
+      <div class="tagline" style="margin-top:22px">🔥 ${profile.streak.count}-day streak · 🪙 ${profile.coins.toLocaleString()}</div>`, 'title'];
   },
 
   worlds() {
@@ -168,9 +176,29 @@ const screens = {
       With Scavenger Lens boost — Common 34% · Uncommon 28% · Rare 20% · Epic 12% · Legendary 6%.<br>
       Supply drops always roll Epic or better. Weapon type — Blaster 34% · Pulse Rifle 26% · Scatter Gun 22% · Longshot 18%.<br>
       Rare golden chest: 1 in 60.</div>
+      <button class="btn small" data-act="go" data-arg="privacy" style="margin-top:12px">PRIVACY &amp; DATA</button>
+      ${referralsAllowed() ? `<h3 style="font-size:10px;margin:16px 0 6px">INVITE FRIENDS</h3>
+        <div class="row"><div class="txt">Your code: <b style="color:var(--gold);font-size:14px">${myRefCode()}</b><small>Share it — friends can enter it for a bonus.</small></div><button class="btn small green" data-act="invite">SHARE</button></div>
+        <div style="display:flex;gap:6px"><input type="text" id="refInput" maxlength="6" placeholder="FRIEND'S CODE" value="${pendingRef || ''}" style="text-transform:uppercase"><button class="btn small gold" data-act="redeem">REDEEM</button></div>` : ''}
       <div class="testnote">TEST MODE: purchases are simulated — no real money is charged. See README to connect a real payment provider.</div>
       <button class="btn red small" data-act="resetProfile">RESET ALL PROGRESS</button></div>
       <div class="panel" style="margin-top:12px;font-size:8px;color:var(--dim)">PC: WASD move · Space jump (double-tap to fly in creative) · Shift sprint · LMB mine/attack/fire · RMB place/use · 1-9 / wheel hotbar · E inventory · Q ability · Z/X/C build wall/ramp/floor (Royale) · G ping · V camera · H emote<br>Touch: left stick move · drag right side to look · buttons on the right.</div>`, ''];
+  },
+
+  privacy() {
+    const child = profile.ageGroup === 'child', an = !!profile.consent?.analytics;
+    return [`${topbar('PRIVACY & DATA')}<div class="panel" style="font-size:9px;line-height:1.8">
+      <b>Your data stays on this device.</b> This version has no accounts, no ads and no tracking. It stores your game progress, purchases receipts, settings and age group (not your birth year) in local storage.<br><br>
+      <b>Age group:</b> ${profile.ageGroup || '—'} ${child ? '· under-13 protections ON: purchases, invites, clips-sharing and analytics are off.' : ''}<br>
+      <b>Policy accepted:</b> ${profile.consent ? `v${profile.consent.version} on ${new Date(profile.consent.ts).toLocaleDateString()}` : 'not yet'}</div>
+      <div class="row" style="margin-top:10px"><div class="txt">Anonymous usage stats<small>${child ? 'Always off for players under 13.' : 'Counts of sessions and feature use. No names, no device IDs.'}</small></div>
+        <button class="btn small ${an ? 'green' : ''}" ${child ? 'disabled' : ''} data-act="analytics">${an ? 'ON' : 'OFF'}</button></div>
+      <div class="grid" style="margin-top:10px;grid-template-columns:1fr 1fr">
+        <button class="btn small" data-act="link" data-arg="${APP.privacyUrl}">PRIVACY POLICY</button>
+        <button class="btn small" data-act="link" data-arg="${APP.termsUrl}">TERMS</button>
+        <button class="btn small" data-act="exportData">EXPORT MY DATA</button>
+        <button class="btn small red" data-act="deleteAsk">DELETE ALL MY DATA</button></div>
+      <p style="font-size:8px;color:var(--dim)">Questions or requests: ${APP.supportEmail}</p>`, ''];
   },
 
   pause() {
@@ -205,7 +233,7 @@ export function show(name) {
   if (name === 'skins') startPreview();
   if (name === 'title') $('#logo')?.addEventListener('click', (e) => { logoTap(e.currentTarget); });
 }
-const refresh = () => { const sc = $('.screen', root()); const keep = sc?.scrollTop; const tr = $('#track')?.scrollLeft; show(cur); const n = $('.screen', root()); if (n && keep) n.scrollTop = keep; if ($('#track') && tr) $('#track').scrollLeft = tr; };
+const refresh = () => { if ($('.modal', root())) return; const sc = $('.screen', root()); const keep = sc?.scrollTop; const tr = $('#track')?.scrollLeft; show(cur); const n = $('.screen', root()); if (n && keep) n.scrollTop = keep; if ($('#track') && tr) $('#track').scrollLeft = tr; };
 
 // ------------------------------------------------------------------ skin preview
 function startPreview() {
@@ -276,10 +304,22 @@ const acts = {
   claimAll: () => { claimAll(); refresh(); },
   touchMode: (m) => { profile.settings.touch = m; save(true); refresh(); },
   resetProfile: () => { if (confirm('Erase coins, skins, pass progress and settings?')) { resetProfile(); show('settings'); } },
+  link: (u) => openLink(u),
+  daily: () => startGame(dailyMeta()),
+  invite: () => shareInvite(),
+  redeem: () => { const r = redeemRefCode($('#refInput').value); toast(r.msg, r.ok ? 'gold' : ''); if (r.ok) { pendingRef = null; refresh(); } },
+  analytics: () => { setAnalyticsConsent(!profile.consent?.analytics); refresh(); },
+  exportData: async () => { const blob = new Blob([JSON.stringify(exportData(), null, 2)], { type: 'application/json' }); const r = await shareFile(blob, 'pixel-realms-data.json', 'My Pixel Realms data'); if (r) toast('Data export ready', 'gold'); },
+  deleteAsk: () => modal(`<h3 style="color:var(--red)">Delete everything?</h3><p>This permanently erases your progress, skins, purchases record and settings from this device. Purchases made with real money can be restored from the store afterwards.</p>
+    <div class="btns"><button class="btn red" data-act="deleteGo">DELETE</button><button class="btn" data-act="closeModal">CANCEL</button></div>`),
+  deleteGo: () => { deleteAllData(); closeModal(); toast('All data deleted', 'gold'); location.reload(); },
+  clipShare: () => { const b = window.__clip; closeModal(); if (b) shareClip(b); },
+  shareRes: () => { if (window.__lastRes) shareResult(window.__lastRes); },
   ageOk: () => {
+    if (!$('#agreeTos').checked) return toast('Please accept the Terms and Privacy Policy to continue', '');
     const y = parseInt($('#birthYear').value, 10), now = new Date().getFullYear();
     if (!y || y < 1900 || y > now) return toast('Enter a valid birth year', '');
-    const age = now - y; profile.ageGroup = age < 13 ? 'child' : age < 18 ? 'teen' : 'adult'; save(true); show('title');
+    const age = now - y; profile.ageGroup = age < 13 ? 'child' : age < 18 ? 'teen' : 'adult'; recordConsent({ analytics: $('#optAnalytics').checked }); track('age_gate_done'); show('title'); bootStreak();
   },
   restore: () => restorePurchases(),
   newWorld: () => newWorldModal(),
@@ -319,6 +359,8 @@ acts.closeModal = closeModal;
 function startGame(meta) {
   mount('none', '');
   game.startWorld(meta);
+  $('#btnRec').classList.toggle('hidden', profile.ageGroup === 'child');
+  track('world_start', { mode: meta.mode });
   if (!game.isTouch) game.canvas.requestPointerLock?.();
 }
 
@@ -327,10 +369,29 @@ export function showDeath(info) {
     <div class="btns"><button class="btn green" data-act="respawn">RESPAWN</button></div>`);
 }
 export function showResults(res) {
+  const best = recordDaily(res); window.__lastRes = res;
+  const t = `${Math.floor(res.time / 60)}:${String(res.time % 60).padStart(2, '0')}`;
   modal(`<h3 style="color:${res.win ? 'var(--gold)' : 'var(--red)'}">${res.win ? '🏆 LAST ONE STANDING!' : 'ELIMINATED'}</h3>
-    <p>Placement <b style="color:#fff">#${res.place}</b> · Eliminations <b style="color:#fff">${res.kills}</b></p>
+    ${res.daily ? `<p>Daily Challenge #${res.daily} ${best ? '<span class="tag">NEW BEST</span>' : ''}</p>` : ''}
+    <p>Placement <b style="color:#fff">#${res.place}</b> · Eliminations <b style="color:#fff">${res.kills}</b> · Time <b style="color:#fff">${t}</b></p>
     <p>+${res.xp} pass XP · +${res.coins} 🪙</p>
-    <div class="btns"><button class="btn green" data-act="results">CONTINUE</button></div>`);
+    <div class="btns">${profile.ageGroup !== 'child' ? '<button class="btn gold" data-act="shareRes">SHARE RESULT</button>' : ''}<button class="btn green" data-act="results">CONTINUE</button></div>`);
+  track('royale_end', { win: res.win, place: res.place, daily: !!res.daily });
+}
+
+function bootStreak() {
+  const r = claimStreak(); if (!r) return;
+  modal(`<h3 style="color:var(--gold)">🔥 ${r.count}-day streak!</h3><p>Come back every day — day 7 pays the most.</p><div class="price" style="font-size:16px">+${r.reward} 🪙</div>
+    <div class="btns"><button class="btn green" data-act="closeModal">COLLECT</button></div>`);
+}
+
+function handleLink(url) {
+  const l = parseDeepLink(url); if (!l) return;
+  if (l.ref) pendingRef = l.ref;   // validated format; only usable later if the profile is allowed to redeem
+  if (l.ref && referralsAllowed() && !profile.refRedeemed) toast('Invite code ready in Settings', 'gold');
+  if (!profile.ageGroup || game.mode === 'play') return;
+  if (l.type === 'daily') startGame(dailyMeta());
+  if (l.type === 'seed') { newWorldModal(); $('#wSeed').value = l.seed; }
 }
 
 // ------------------------------------------------------------------ init
@@ -340,6 +401,7 @@ export function initUI(g) {
   const r = root();
   r.addEventListener('click', (e) => {
     const el = e.target.closest('[data-act]'); if (!el) return;
+    if (el.tagName === 'A') e.preventDefault();
     const fn = acts[el.dataset.act]; if (fn) fn(el.dataset.arg);
   });
   r.addEventListener('input', (e) => {
@@ -349,6 +411,15 @@ export function initUI(g) {
   });
   $('#btnPause').addEventListener('click', () => { game.setPaused(true); });
   $('#hotbar').addEventListener('click', (e) => { const s = e.target.closest('.slot'); if (s) game.select(+s.dataset.i); });
+  const rb = $('#btnRec');
+  rb.addEventListener('click', () => {
+    if (isRecording()) return stopClip();
+    if (startClip(game.canvas, 15, (blob) => {
+      rb.textContent = '⏺'; window.__clip = blob;
+      modal(`<h3>🎬 Clip ready</h3><p>${Math.round(blob.size / 1024)} KB · up to 15 seconds</p><div class="btns"><button class="btn gold" data-act="clipShare">SHARE / SAVE</button><button class="btn" data-act="closeModal">DISCARD</button></div>`);
+    })) { rb.textContent = '⏹'; toast('Recording up to 15s — tap again to stop', ''); }
+  });
+  onNativeEvent((m) => { if (m.type === 'deeplink') handleLink(m.url); });
   game.hooks.onPause = () => show('pause');
   game.hooks.onResume = () => mount('none', '');
   game.hooks.onInventory = toggleInventory;
@@ -356,5 +427,7 @@ export function initUI(g) {
   game.hooks.onResults = showResults;
   onProfileChange(() => { if (cur === 'title' && game.mode !== 'play') refresh(); });
   game.startBackdrop();
-  show(profile.ageGroup ? 'title' : 'agegate');
+  if (needsConsent()) show('agegate'); else { show('title'); bootStreak(); }
+  if (profile.tamperedAt && !profile.tamperNotified) { profile.tamperNotified = true; save(true); toast('Save data failed a safety check and was restored from your purchase records.', ''); }
+  handleLink(location.href);
 }

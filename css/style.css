@@ -127,3 +127,7 @@ input[type=range] { width: 100%; }
 @keyframes tin { from { transform: translateY(-14px); opacity: 0; } }
 .confetti { position: fixed; top: -20px; width: 8px; height: 8px; z-index: 30; pointer-events: none; animation: fall 2.2s linear forwards; } @keyframes fall { to { transform: translateY(110vh) rotate(720deg); } }
 body.disco #c { animation: disco 1.2s steps(6) infinite; } @keyframes disco { 0% { filter: hue-rotate(0deg) saturate(1.5); } 100% { filter: hue-rotate(360deg) saturate(1.5); } }
+
+#btnRec { position: absolute; right: calc(max(10px, env(safe-area-inset-right)) + 54px); top: max(10px, env(safe-area-inset-top)); pointer-events: auto; color: #ff5a6a; }
+label.check { display: flex; gap: 8px; align-items: flex-start; text-align: left; font-size: 8px; line-height: 1.7; margin: 10px 0 0; color: var(--text); }
+label.check input { width: 18px; height: 18px; flex: none; margin-top: 2px; } label.check a { color: var(--gold); }

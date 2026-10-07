@@ -5,6 +5,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "node server.mjs"
+    "start": "node server.mjs",
+    "csp": "node scripts/csp.mjs",
+    "test": "node scripts/unit.mjs"
   }
 }

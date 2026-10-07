@@ -19,7 +19,13 @@ createServer(async (req, res) => {
     const file = normalize(join(root, path));
     if (!file.startsWith(root)) throw new Error('forbidden');
     const body = await readFile(file);
-    res.writeHead(200, { 'Content-Type': types[extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-cache' });
+    res.writeHead(200, {
+      'Content-Type': types[extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-cache',
+      // Security headers (mirror these on your real host). frame-ancestors can only be set as a header.
+      'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer', 'X-Frame-Options': 'DENY',
+      'Content-Security-Policy': "frame-ancestors 'none'",
+      'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=()',
+    });
     res.end(body);
   } catch {
     res.writeHead(404); res.end('Not found');
