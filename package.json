@@ -1,0 +1,10 @@
+{
+  "name": "pixel-realms",
+  "version": "0.1.0",
+  "description": "Voxel sandbox game with skins, battle pass and boosts (prototype)",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs"
+  }
+}
