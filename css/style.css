@@ -131,3 +131,6 @@ body.disco #c { animation: disco 1.2s steps(6) infinite; } @keyframes disco { 0%
 #btnRec { position: absolute; right: calc(max(10px, env(safe-area-inset-right)) + 54px); top: max(10px, env(safe-area-inset-top)); pointer-events: auto; color: #ff5a6a; }
 label.check { display: flex; gap: 8px; align-items: flex-start; text-align: left; font-size: 8px; line-height: 1.7; margin: 10px 0 0; color: var(--text); }
 label.check input { width: 18px; height: 18px; flex: none; margin-top: 2px; } label.check a { color: var(--gold); }
+
+/* children of a scrolling screen must never shrink (short landscape phones were clipping the reward track) */
+.screen > * { flex-shrink: 0; }

@@ -1,0 +1,18 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule: { interval: weekly }
+    groups: { dev-tools: { patterns: ['*'] } }
+  - package-ecosystem: npm
+    directory: /mobile
+    schedule: { interval: weekly }
+    ignore:
+      # Expo pins compatible versions per SDK; upgrade these together with `npx expo install --fix`
+      - dependency-name: expo
+      - dependency-name: react
+      - dependency-name: react-native
+      - dependency-name: "expo-*"
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: weekly }

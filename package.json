@@ -6,7 +6,22 @@
   "type": "module",
   "scripts": {
     "start": "node server.mjs",
+    "setup": "node scripts/setup.mjs",
+    "lint": "node scripts/lint.mjs",
     "csp": "node scripts/csp.mjs",
-    "test": "node scripts/unit.mjs"
+    "test": "node scripts/unit.mjs",
+    "e2e": "node scripts/e2e.mjs",
+    "verify": "npm run lint && npm test && npm --prefix mobile run build:game && npm --prefix mobile test && npm --prefix mobile run typecheck && npm run e2e",
+    "release:check": "node scripts/release-check.mjs",
+    "store:meta": "node scripts/store-metadata.mjs",
+    "store:assets": "node scripts/store-assets.mjs",
+    "store:all": "npm run store:meta && npm run store:assets",
+    "build:web": "node scripts/build-web.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.56.1"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }

@@ -7,6 +7,8 @@ Three.js, no build step, no runtime dependencies (Three.js is vendored in `vendo
 npm start            # http://localhost:8080  (or any static file server)
 ```
 
+> **Automation:** CI, web deploy, cloud app builds, store screenshots/IAP files and a pre-launch gate are set up — see `docs/AUTOMATION.md` for what's automatic and the short list of things only you can do.
+
 ## What's in the prototype
 
 | Area | What exists |
@@ -40,6 +42,7 @@ js/ui.js                       every menu screen and overlay
 js/easter.js                   secrets
 scripts/smoke.mjs              headless Chromium smoke test (needs playwright)
 docs/STORE_AND_MARKETING.md    what you need to ship + advertise this (READ THIS)
+docs/AUTOMATION.md             what is automated (CI, builds, store assets) + your launch checklist
 docs/VIRAL_IDEAS.md            growth ideas ranked by effort, with status
 docs/SECURITY.md, PRIVACY.md   threat model, controls, known gaps, data map, store-form answers
 js/viral.js, native.js, privacy.js, analytics.js, config.js   shareable features, native bridge, data rights, consent-gated analytics

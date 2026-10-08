@@ -1,0 +1,68 @@
+name: Release build (EAS)
+# Builds the iOS/Android apps in the cloud with Expo EAS and (optionally) submits them to the stores.
+# Needs one repo secret: EXPO_TOKEN  (expo.dev → Account → Access tokens). Store credentials are managed by EAS
+# (run `npx eas-cli credentials` once locally). Tags like v0.2.0 build "production" and create a GitHub release.
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Platform
+        type: choice
+        options: [all, ios, android]
+        default: all
+      profile:
+        description: Build profile (production runs the strict release gate)
+        type: choice
+        options: [preview, production]
+        default: preview
+      submit:
+        description: Submit to App Store Connect / Google Play after building
+        type: boolean
+        default: false
+  push:
+    tags: ['v*']
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      PROFILE: ${{ github.event.inputs.profile || 'production' }}
+      PLATFORM: ${{ github.event.inputs.platform || 'all' }}
+      SUBMIT: ${{ github.event.inputs.submit || 'false' }}
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            mobile/package-lock.json
+      - name: Require EXPO_TOKEN
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then echo "::error::Add the EXPO_TOKEN repository secret (expo.dev → Access tokens)."; exit 1; fi
+      - run: npm ci
+      - run: npm --prefix mobile ci
+      - run: npm run lint && npm test
+      - name: Strict release gate (production only)
+        if: env.PROFILE == 'production'
+        run: npm run release:check
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - name: Build
+        working-directory: mobile
+        run: |
+          npm run build:game
+          FLAGS="--non-interactive --no-wait"
+          if [ "$SUBMIT" = "true" ]; then FLAGS="--non-interactive --auto-submit"; fi
+          eas build --platform "$PLATFORM" --profile "$PROFILE" $FLAGS
+      - name: GitHub release notes (tags)
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" --generate-notes --title "$GITHUB_REF_NAME"
