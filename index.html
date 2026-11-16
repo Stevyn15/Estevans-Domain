@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Watch Together — movie night, miles apart</title>
+<meta name="description" content="Free watch party: stream a movie from your computer to a friend's phone or browser, with chat and reactions. No sign-up, no app.">
+<meta property="og:title" content="Watch Together">
+<meta property="og:description" content="Join my movie night — just open the link.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23ff5a4e'/><path d='M12 9l12 7-12 7z' fill='white'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0e1626;--panel:#16213a;--panel2:#1c2947;--ink:#f4ecdf;--mute:#a9b0c2;--line:#26324f;--acc:#ff5a4e;--acc2:#5fd3c6}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Inter,system-ui,sans-serif;overflow-x:clip}
+a{color:var(--acc2)}
+.wrap{max-width:1240px;margin:0 auto;padding:0 max(4vw,14px)}
+header{display:flex;align-items:center;justify-content:space-between;padding:16px 0}
+.logo{display:flex;align-items:center;gap:10px;font:800 26px/1 "Big Shoulders Display",Impact,sans-serif;letter-spacing:.02em;color:var(--ink);text-decoration:none}
+.logo i{width:30px;height:30px;border-radius:8px;background:var(--acc);display:grid;place-items:center}
+.logo i::after{content:"";border-left:11px solid #fff;border-top:7px solid transparent;border-bottom:7px solid transparent;margin-left:3px}
+h1{font:800 clamp(40px,7vw,76px)/1 "Big Shoulders Display",Impact,sans-serif;margin:0 0 14px;text-wrap:balance}
+h2{font:700 26px/1.1 "Big Shoulders Display",sans-serif;margin:0 0 10px;letter-spacing:.02em}
+.lead{font-size:clamp(17px,2vw,20px);color:var(--mute);max-width:48ch;margin:0 0 26px}
+.hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:clamp(20px,4vw,56px);align-items:center;padding:clamp(20px,5vw,64px) 0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px}
+.cards{display:grid;gap:14px}
+.btn{appearance:none;border:0;border-radius:999px;min-height:46px;padding:10px 20px;font:600 16px Inter,sans-serif;cursor:pointer;background:var(--acc);color:#fff;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
+.btn.ghost{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line)}
+.btn.sm{min-height:44px;padding:8px 14px;font-size:15px}
+.btn:disabled{opacity:.45;cursor:default}
+.btn:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--acc2);outline-offset:2px}
+input[type=text]{font:16px Inter,sans-serif;min-height:46px;padding:8px 14px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);width:100%}
+input.code{text-transform:uppercase;letter-spacing:.25em;font-weight:600}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.row>input{flex:1 1 160px}
+.small{font-size:14px;color:var(--mute)}
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;padding:0 0 56px}
+.steps b{display:block;font:700 22px "Big Shoulders Display",sans-serif;color:var(--acc)}
+.poster{position:relative;aspect-ratio:4/3;border-radius:18px;overflow:hidden;background:radial-gradient(120% 90% at 50% 0%,#2a3a63,#05070c 75%)}
+.poster svg{position:absolute;inset:0;width:100%;height:100%}
+/* room */
+#room{display:none;padding-bottom:40px}
+.stage{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start}
+.screen{position:relative;border-radius:14px;overflow:hidden;background:#000;aspect-ratio:16/9;box-shadow:0 30px 80px -30px rgba(255,90,78,.45),0 0 0 1px var(--line)}
+video{width:100%;height:100%;display:block;background:#000}
+.over{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:20px;background:radial-gradient(120% 90% at 50% 0%,#24304d,#05070c 72%)}
+.over b{display:block;font:800 clamp(24px,4vw,38px)/1.05 "Big Shoulders Display",sans-serif;margin-bottom:8px}
+.over p{margin:0 auto 16px;color:#c3c8d6;max-width:44ch}
+.unmute{position:absolute;left:12px;top:12px;z-index:3;display:none}
+.gbar{display:none;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
+.gbar .t{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--mute);white-space:nowrap}
+.side{display:grid;gap:14px}
+.share .codebig{font:800 40px/1 "Big Shoulders Display",sans-serif;letter-spacing:.18em;color:var(--acc);margin:4px 0 10px}
+.link{font-size:14px;color:var(--mute);overflow-wrap:anywhere;margin-bottom:10px}
+.ppl{display:flex;flex-wrap:wrap;gap:6px;margin:0;padding:0;list-style:none}
+.ppl li{background:var(--panel2);border-radius:999px;padding:4px 12px;font-size:14px}
+.ppl li.me{box-shadow:inset 0 0 0 1.5px var(--acc)}
+.chat{display:flex;flex-direction:column;height:340px}
+.msgs{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding-right:4px;margin-bottom:10px}
+.msg{font-size:15px;overflow-wrap:anywhere}
+.msg b{color:var(--acc2);font-weight:600}
+.msg.sys{color:var(--mute);font-size:13px;font-style:italic}
+.reacts{display:flex;gap:4px;margin-bottom:8px}
+.reacts button{flex:1;min-height:44px;border:0;border-radius:10px;background:var(--panel2);font-size:22px;cursor:pointer}
+.float{position:absolute;bottom:10%;font-size:40px;pointer-events:none;animation:up 2.6s ease-out forwards;z-index:4}
+@keyframes up{to{transform:translateY(-260px);opacity:0}}
+.status{display:flex;align-items:center;gap:8px;color:var(--mute);font-size:14px}
+.dot{width:10px;height:10px;border-radius:50%;background:#8a8f9c;flex:none}
+.dot.on{background:var(--acc2);box-shadow:0 0 0 4px rgba(95,211,198,.25)}
+.note{margin-top:10px;padding:12px 14px;border-radius:10px;background:rgba(255,90,78,.14);font-size:15px;display:none}
+.note.show{display:block}
+.toast{position:fixed;left:50%;bottom:20px;translate:-50% 0;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:14px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:9;max-width:90vw;text-align:center}
+.toast.show{opacity:1}
+footer{color:var(--mute);font-size:13px;padding:24px 0 40px;border-top:1px solid var(--line)}
+input[type=file]{display:none}
+@media(max-width:900px){.stage{grid-template-columns:minmax(0,1fr)}.hero{grid-template-columns:minmax(0,1fr)}.poster{display:none}}
+@media(max-width:600px){.steps{grid-template-columns:minmax(0,1fr)}.chat{height:300px}}
+@media(prefers-reduced-motion:reduce){.float{animation-duration:.01s}.toast{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <a class="logo" href="./"><i></i>Watch Together</a>
+  <div class="status" id="statusBox" hidden><span class="dot" id="dot"></span><span id="statusTxt"></span></div>
+</header>
+
+<!-- LANDING -->
+<main id="landing">
+  <section class="hero">
+    <div>
+      <h1>Movie night, miles apart.</h1>
+      <p class="lead">Play a movie from your computer and your friend watches it live from a link on their phone or laptop. No sign-ups, no apps, no uploading.</p>
+      <div class="cards">
+        <div class="card">
+          <h2>Host a party</h2>
+          <div class="row" style="margin-bottom:10px"><input type="text" id="hName" maxlength="24" placeholder="Your name" autocomplete="nickname"></div>
+          <button class="btn" id="hostBtn">Pick a movie &amp; start</button>
+          <p class="small" id="hostHint" style="margin:10px 0 0">Your movie streams straight from your device to your friends.</p>
+        </div>
+        <div class="card">
+          <h2>Join a party</h2>
+          <div class="row"><input type="text" id="jCode" class="code" maxlength="5" placeholder="CODE" autocomplete="off" inputmode="text"><button class="btn ghost" id="joinBtn">Join</button></div>
+        </div>
+      </div>
+    </div>
+    <div class="poster" aria-hidden="true">
+      <svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
+        <defs><linearGradient id="beam" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd9a0" stop-opacity=".55"/><stop offset="1" stop-color="#ffd9a0" stop-opacity="0"/></linearGradient>
+        <linearGradient id="scr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff7b62"/><stop offset="1" stop-color="#5fd3c6"/></linearGradient></defs>
+        <rect x="70" y="36" width="260" height="140" rx="8" fill="url(#scr)"/>
+        <rect x="70" y="36" width="260" height="140" rx="8" fill="#000" opacity=".15"/>
+        <path d="M188 82l40 24-40 24z" fill="#fff" opacity=".9"/>
+        <path d="M70 176L20 300h360l-50-124z" fill="url(#beam)" opacity=".35"/>
+        <g fill="#0b1120"><rect x="40" y="230" width="140" height="70" rx="22"/><rect x="220" y="230" width="140" height="70" rx="22"/></g>
+        <g fill="#16213a"><circle cx="85" cy="222" r="20"/><circle cx="135" cy="226" r="18"/><circle cx="265" cy="222" r="20"/><circle cx="315" cy="226" r="18"/></g>
+        <path d="M180 256q20-26 40 0" stroke="#ff5a4e" stroke-width="4" fill="none" stroke-dasharray="2 8" stroke-linecap="round"/>
+      </svg>
+    </div>
+  </section>
+  <section class="steps">
+    <div class="card"><b>1. Pick your movie</b>Choose a file you've downloaded. It plays on your screen and streams to the room.</div>
+    <div class="card"><b>2. Send the link</b>Text your friend the link or the 5-letter code. They tap it — that's it.</div>
+    <div class="card"><b>3. Watch together</b>Anyone can pause or skip. Chat and send reactions while you watch.</div>
+  </section>
+</main>
+
+<!-- ROOM -->
+<main id="room">
+  <div class="stage">
+    <div>
+      <div class="screen" id="screen">
+        <video id="v" playsinline></video>
+        <button class="btn sm unmute" id="unmute">Tap for sound</button>
+        <div class="over" id="over"><div id="overBody"></div></div>
+      </div>
+      <div class="gbar" id="gbar">
+        <button class="btn sm" id="gPlay">Play</button>
+        <button class="btn sm ghost" id="gBack">−10s</button>
+        <button class="btn sm ghost" id="gFwd">+10s</button>
+        <button class="btn sm ghost" id="gFull">Full screen</button>
+        <span class="t" id="gTime"></span>
+      </div>
+      <div class="row" id="hbar" style="margin-top:10px;display:none">
+        <button class="btn sm ghost" id="change">Change movie</button>
+        <button class="btn sm ghost" id="subBtn">Add subtitles</button>
+        <label class="small" id="ownWrap" style="display:inline-flex;align-items:center;gap:8px;min-height:44px;cursor:pointer"><input type="checkbox" id="ownCopy" style="width:20px;height:20px;flex:none;margin:0"> Everyone has their own copy</label>
+      </div>
+      <div class="note" id="note"></div>
+    </div>
+    <aside class="side">
+      <div class="card share" id="shareCard" style="display:none">
+        <div class="small">Room code</div>
+        <div class="codebig" id="codeBig"></div>
+        <div class="link" id="linkTxt"></div>
+        <div class="row"><button class="btn sm" id="shareBtn">Send invite</button><button class="btn sm ghost" id="copyBtn">Copy link</button></div>
+      </div>
+      <div class="card"><h2>In the room</h2><ul class="ppl" id="ppl"></ul></div>
+      <div class="card chat">
+        <div class="msgs" id="msgs"></div>
+        <div class="reacts" id="reacts"></div>
+        <form class="row" id="chatForm"><input type="text" id="chatIn" maxlength="300" placeholder="Say something" autocomplete="off"><button class="btn sm">Send</button></form>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<footer>Movies play peer-to-peer between your devices — nothing is uploaded or stored. Only share movies you have the right to watch.</footer>
+</div>
+<input type="file" id="file" accept="video/*,.mkv,.mp4,.m4v,.webm,.mov">
+<input type="file" id="subs" accept=".srt,.vtt">
+<div class="toast" id="toast"></div>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script>
+{
+const PREFIX='wtparty-sm-';
+const ICE={iceServers:[
+  {urls:'stun:stun.l.google.com:19302'},
+  {urls:'stun:global.stun.twilio.com:3478'},
+  // Free public relay for tricky networks (cell data, school Wi-Fi). Replace with your own TURN if it stops working.
+  {urls:'turn:openrelay.metered.ca:80',username:'openrelayproject',credential:'openrelayproject'},
+  {urls:'turn:openrelay.metered.ca:443?transport=tcp',username:'openrelayproject',credential:'openrelayproject'}
+]};
+const $=id=>document.getElementById(id);
+const v=$('v');
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=s=>{s=Math.max(0,Math.floor(s||0));const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=String(s%60).padStart(2,'0');return h?`${h}:${String(m).padStart(2,'0')}:${x}`:`${m}:${x}`};
+let tt;const toast=m=>{const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),2800)};
+const note=m=>{$('note').textContent=m||'';$('note').classList.toggle('show',!!m)};
+const store={get:k=>{try{return localStorage.getItem(k)||''}catch(e){return''}},set:(k,x)=>{try{localStorage.setItem(k,x)}catch(e){}}};
+const canStream=!!(HTMLMediaElement.prototype.captureStream||HTMLMediaElement.prototype.mozCaptureStream);
+
+let peer=null,isHost=false,mode='stream',code='',myName=store.get('wt-name');
+let conns=[];            // host: guest data connections
+let hostConn=null;       // guest: connection to host
+let calls=new Map();     // host: media calls by peer id
+let pending=new Set();   // host: guests waiting for a stream
+let stream=null,loaded=false,suppress=0,hostState={playing:false,t:0,dur:0};
+let fileInfo=null,joinedOnce=false;
+$('hName').value=myName;
+
+function setStatus(on,txt){$('statusBox').hidden=false;$('dot').classList.toggle('on',on);$('statusTxt').textContent=txt}
+function overlay(html){$('over').style.display=html?'grid':'none';$('overBody').innerHTML=html||''}
+function enterRoom(){$('landing').style.display='none';$('room').style.display='block';scrollTo(0,0)}
+
+// ---------- chat & reactions ----------
+const EMO=['😂','😮','😍','👏','🍿','😭'];
+$('reacts').innerHTML=EMO.map(e=>`<button type="button" aria-label="React ${e}">${e}</button>`).join('');
+$('reacts').onclick=e=>{const b=e.target.closest('button');if(!b)return;const m={type:'react',e:b.textContent,name:myName};floatEmoji(m.e);send(m)};
+function floatEmoji(e){if(!EMO.includes(e))return;const s=document.createElement('div');s.className='float';s.textContent=e;s.style.left=(10+Math.random()*75)+'%';$('screen').appendChild(s);setTimeout(()=>s.remove(),2700)}
+function addMsg(name,text,sys){const d=document.createElement('div');d.className='msg'+(sys?' sys':'');d.innerHTML=sys?esc(text):`<b>${esc(name||'Guest')}</b> ${esc(text)}`;const box=$('msgs');box.appendChild(d);box.scrollTop=box.scrollHeight}
+$('chatForm').onsubmit=e=>{e.preventDefault();const t=$('chatIn').value.trim();if(!t)return;$('chatIn').value='';addMsg(myName,t);send({type:'chat',name:myName,text:t.slice(0,300)})};
+
+// send from me: host -> all guests; guest -> host
+function send(m,except){
+  if(isHost)conns.forEach(c=>{if(c!==except&&c.open)c.send(m)});
+  else if(hostConn&&hostConn.open)hostConn.send(m);
+}
+function roster(){
+  const names=[myName+' (host)'].concat(conns.map(c=>c.metadata&&c.metadata.name||'Guest'));
+  if(isHost){renderPpl(names,0);send({type:'roster',names})}
+}
+function renderPpl(names,meIdx){$('ppl').innerHTML=names.map((n,i)=>`<li class="${i===meIdx?'me':''}">${esc(String(n).slice(0,40))}</li>`).join('')}
+
+// ---------- video / file ----------
+$('change').onclick=()=>$('file').click();
+$('file').onchange=()=>{
+  const f=$('file').files[0];if(!f)return;
+  if(v.src&&v.src.startsWith('blob:'))URL.revokeObjectURL(v.src);
+  v.srcObject=null;fileInfo={name:f.name,size:f.size};loaded=false;
+  v.src=URL.createObjectURL(f);v.controls=true;
+  overlay('');
+};
+v.addEventListener('loadedmetadata',()=>{
+  if(v.srcObject)return;
+  loaded=true;fileInfo&&(fileInfo.dur=Math.round(v.duration||0));
+  if(isHost){
+    if(mode==='stream'){stream=null;getStream();recallAll()}
+    send(hello());
+  }else if(mode==='file'){
+    if(hostState.dur&&fileInfo&&Math.abs(hostState.dur-fileInfo.dur)>3)note(`Your file is ${fmt(fileInfo.dur)} long but the host's is ${fmt(hostState.dur)} — you may have different versions.`);
+    applyState(hostState,'Synced with the host');
+  }
+});
+v.addEventListener('error',()=>{if(v.src&&!v.srcObject)note('This file type won’t play in this browser. Try an MP4 version (MKV files often don’t work).')});
+
+$('subBtn').onclick=()=>$('subs').click();
+$('subs').onchange=async()=>{
+  const f=$('subs').files[0];if(!f)return;let t=await f.text();
+  if(!/^WEBVTT/.test(t.trim()))t='WEBVTT\n\n'+t.replace(/\r/g,'').replace(/(\d\d:\d\d:\d\d),(\d\d\d)/g,'$1.$2');
+  [...v.querySelectorAll('track')].forEach(x=>x.remove());
+  const tr=document.createElement('track');tr.kind='subtitles';tr.label='Subtitles';tr.default=true;
+  tr.src=URL.createObjectURL(new Blob([t],{type:'text/vtt'}));v.appendChild(tr);
+  setTimeout(()=>{if(v.textTracks[0])v.textTracks[0].mode='showing'},50);
+  toast(mode==='stream'&&isHost?'Subtitles show on your screen only':'Subtitles added');
+};
+
+function getStream(){
+  if(!stream){try{stream=v.captureStream?v.captureStream():v.mozCaptureStream()}catch(e){stream=null}}
+  return stream;
+}
+const streamReady=()=>stream&&stream.getVideoTracks().length>0;
+function callGuest(id){
+  if(!streamReady()){pending.add(id);return}
+  const old=calls.get(id);if(old)try{old.close()}catch(e){}
+  calls.set(id,peer.call(id,stream));
+}
+function recallAll(){conns.forEach(c=>pending.add(c.peer));flush()}
+function flush(){if(!streamReady())return;[...pending].forEach(id=>{pending.delete(id);if(conns.some(c=>c.peer===id))callGuest(id)})}
+v.addEventListener('playing',()=>{if(isHost&&mode==='stream'){getStream();setTimeout(flush,300)}});
+
+// state sync
+const curState=()=>({type:'state',playing:!v.paused,t:v.currentTime,dur:Math.round(v.duration||0)});
+function applyState(s,label){
+  if(!s)return;
+  if(mode==='stream'&&!isHost){hostState=s;guestUI();return}
+  if(!loaded)return;
+  suppress=Date.now()+1200;
+  if(Math.abs(v.currentTime-s.t)>0.7)v.currentTime=Math.min(s.t,(v.duration||s.t)-0.1);
+  if(s.playing&&v.paused)v.play().catch(()=>note('Tap play once so your browser allows the movie to start — it stays synced after that.'));
+  if(!s.playing&&!v.paused)v.pause();
+  if(label)toast(label);
+}
+['play','pause','seeked'].forEach(ev=>v.addEventListener(ev,()=>{
+  if(v.srcObject)return;
+  if(isHost){send(curState());return}
+  if(mode==='file'&&loaded&&Date.now()>suppress)send(curState());
+}));
+setInterval(()=>{
+  if(isHost&&loaded&&!v.paused)send({...curState(),hb:true});
+  if(!isHost&&mode==='stream'&&hostState.playing){hostState.t+=1;guestUI()}
+},1000);
+
+// ---------- messages ----------
+function hello(){return{...curState(),type:'hello',mode,host:myName,file:fileInfo&&fileInfo.name}}
+function onData(m,from){
+  if(!m||typeof m!=='object')return;
+  switch(m.type){
+    case 'hello':
+      mode=m.mode==='file'?'file':'stream';hostState={playing:!!m.playing,t:+m.t||0,dur:+m.dur||0};
+      if(!joinedOnce){joinedOnce=true;addMsg('',`You joined ${String(m.host||'the host').slice(0,24)}’s party`,true)}else toast(mode==='file'?'Host switched: open your own copy':'Host is streaming the movie');
+      setupGuestScreen(m);break;
+    case 'roster':if(!isHost&&Array.isArray(m.names)){const i=m.names.indexOf(myName);renderPpl(m.names,i)}break;
+    case 'chat':addMsg(m.name,String(m.text||'').slice(0,300));if(isHost)send(m,from);break;
+    case 'react':floatEmoji(m.e);if(isHost)send(m,from);break;
+    case 'state':
+      if(isHost){ if(mode==='file'){applyState(m,`${from.metadata&&from.metadata.name||'Guest'} ${m.playing?'pressed play':'paused'}`);send(m,from)} }
+      else{ if(m.hb&&mode==='file'){if(loaded&&!v.paused&&Math.abs(v.currentTime-m.t)>2){suppress=Date.now()+1200;v.currentTime=m.t}}
+            else applyState(m,mode==='file'&&!m.hb?`Host ${m.playing?'pressed play':'paused'}`:''); if(m.hb&&mode==='stream'){hostState=m;guestUI()} }
+      break;
+    case 'cmd':
+      if(!isHost||!loaded)return;
+      const who=from.metadata&&from.metadata.name||'Guest';
+      if(m.a==='toggle'){if(v.paused)v.play().catch(()=>{});else v.pause();toast(`${who} ${v.paused?'paused':'pressed play'}`)}
+      if(m.a==='seek'){v.currentTime=Math.max(0,Math.min(v.duration-1,v.currentTime+(+m.d||0)));toast(`${who} skipped ${m.d>0?'ahead':'back'}`)}
+      break;
+  }
+}
+
+// ---------- host ----------
+const ALPHA='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+const newCode=()=>Array.from({length:5},()=>ALPHA[Math.floor(Math.random()*ALPHA.length)]).join('');
+$('hostBtn').onclick=()=>{
+  myName=$('hName').value.trim().slice(0,24)||'Host';store.set('wt-name',myName);
+  $('file').click();
+  if(!peer)startHost();
+};
+if(!canStream)$('hostHint').textContent='Tip: to stream to friends, host from Chrome, Edge or Firefox on a computer. On this device, everyone will need their own copy of the movie.';
+function startHost(){
+  isHost=true;mode=canStream?'stream':'file';code=newCode();
+  enterRoom();overlay('<b>Pick your movie</b><p>Choose the file you want to watch together.</p><button class="btn" onclick="document.getElementById(\'file\').click()">Choose movie</button>');
+  $('hbar').style.display='flex';$('ownCopy').checked=mode==='file';$('ownCopy').disabled=!canStream;
+  $('shareCard').style.display='block';
+  setStatus(false,'Opening room…');
+  peer=new Peer(PREFIX+code,{config:ICE,debug:0});
+  peer.on('open',()=>{
+    const url=location.origin+location.pathname+'?room='+code;
+    $('codeBig').textContent=code;$('linkTxt').textContent=url;
+    setStatus(true,'Room open');roster();addMsg('',`Room ${code} is open. Send the invite to your friend.`,true);
+    history.replaceState(null,'',location.pathname+'#host');
+  });
+  peer.on('error',e=>{
+    if(e.type==='unavailable-id'){peer.destroy();peer=null;startHost();return}
+    if(e.type==='network'||e.type==='server-error'||e.type==='socket-error')setStatus(false,'Connection trouble — retrying…');
+  });
+  peer.on('disconnected',()=>{setStatus(false,'Reconnecting…');setTimeout(()=>{try{peer.reconnect()}catch(e){}},1500)});
+  peer.on('connection',c=>{
+    c.on('open',()=>{
+      conns.push(c);addMsg('',`${(c.metadata&&c.metadata.name)||'A guest'} joined`,true);roster();
+      c.send(hello());
+      if(mode==='stream')callGuest(c.peer);
+    });
+    c.on('data',m=>onData(m,c));
+    c.on('close',()=>{conns=conns.filter(x=>x!==c);const k=calls.get(c.peer);if(k)try{k.close()}catch(e){};calls.delete(c.peer);addMsg('',`${(c.metadata&&c.metadata.name)||'A guest'} left`,true);roster()});
+  });
+}
+$('ownCopy').onchange=()=>{
+  mode=$('ownCopy').checked?'file':'stream';
+  calls.forEach(k=>{try{k.close()}catch(e){}});calls.clear();
+  if(mode==='stream'){getStream();recallAll()}
+  send(hello());toast(mode==='file'?'Friends will open their own copy':'Streaming your movie to friends');
+};
+const inviteUrl=()=>$('linkTxt').textContent;
+$('copyBtn').onclick=async()=>{try{await navigator.clipboard.writeText(inviteUrl());toast('Link copied')}catch(e){toast('Press and hold the link to copy it')}};
+$('shareBtn').onclick=async()=>{
+  const data={title:'Watch Together',text:`Come watch a movie with me! Code ${code}`,url:inviteUrl()};
+  if(navigator.share){try{await navigator.share(data)}catch(e){}}else $('copyBtn').click();
+};
+
+// ---------- guest ----------
+function setupGuestScreen(m){
+  if(mode==='stream'){
+    v.controls=false;$('gbar').style.display='flex';$('hbar').style.display='none';
+    if(!v.srcObject)overlay(`<b>Waiting for the movie</b><p>${esc(String(m.host||'The host').slice(0,24))} will press play in a moment.</p>`);
+    guestUI();
+  }else{
+    $('gbar').style.display='none';$('unmute').style.display='none';if(v.srcObject){v.srcObject=null}$('hbar').style.display='flex';$('ownWrap').style.display='none';
+    $('change').textContent='Choose your copy';
+    if(!loaded)overlay(`<b>Open your copy of the movie</b><p>The host is playing <i>${esc(String(m.file||'a movie').slice(0,80))}</i>. Pick the same file on this device to sync.</p><button class="btn" onclick="document.getElementById('file').click()">Choose movie file</button>`);
+    else applyState(hostState);
+  }
+}
+function guestUI(){
+  $('gPlay').textContent=hostState.playing?'Pause':'Play';
+  $('gTime').textContent=hostState.dur?`${fmt(hostState.t)} / ${fmt(hostState.dur)}`:'';
+}
+$('gPlay').onclick=()=>send({type:'cmd',a:'toggle'});
+$('gBack').onclick=()=>send({type:'cmd',a:'seek',d:-10});
+$('gFwd').onclick=()=>send({type:'cmd',a:'seek',d:10});
+$('gFull').onclick=()=>{const s=$('screen');if(v.webkitEnterFullscreen&&!s.requestFullscreen)return v.webkitEnterFullscreen();(s.requestFullscreen||s.webkitRequestFullscreen||(()=>v.webkitEnterFullscreen&&v.webkitEnterFullscreen())).call(s)};
+$('unmute').onclick=()=>{v.muted=false;v.play().catch(()=>{});$('unmute').style.display='none'};
+
+function join(c){
+  code=String(c||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,5);
+  if(code.length<5){toast('Enter the 5-character code');return}
+  if(!myName){myName=($('hName').value.trim()||'Guest '+Math.floor(Math.random()*90+10)).slice(0,24)}
+  enterRoom();overlay('<b>Joining…</b><p>Finding your friend’s party.</p>');setStatus(false,'Connecting…');
+  peer=new Peer({config:ICE,debug:0});
+  const timer=setTimeout(()=>{if(!hostConn||!hostConn.open)overlay(`<b>Can’t reach the party</b><p>Check the code (${code}) and make sure the host still has the page open.</p><button class="btn" onclick="location.reload()">Try again</button>`)},15000);
+  peer.on('open',()=>{
+    hostConn=peer.connect(PREFIX+code,{metadata:{name:myName},reliable:true});
+    hostConn.on('open',()=>{clearTimeout(timer);setStatus(true,'Connected')});
+    hostConn.on('data',m=>onData(m,hostConn));
+    hostConn.on('close',()=>{setStatus(false,'Party ended');overlay('<b>The party ended</b><p>The host closed the room.</p><button class="btn" onclick="location.reload()">Rejoin</button>')});
+  });
+  peer.on('call',call=>{
+    call.answer();
+    call.on('stream',s=>{
+      v.srcObject=s;overlay('');
+      v.muted=false;v.play().catch(()=>{v.muted=true;v.play().catch(()=>{});$('unmute').style.display='inline-flex'});
+    });
+  });
+  peer.on('error',e=>{
+    if(e.type==='peer-unavailable'){clearTimeout(timer);overlay(`<b>No party with code ${esc(code)}</b><p>Double-check the code, or ask the host to resend the link.</p><button class="btn ghost" onclick="location.href=location.pathname">Back</button>`)}
+  });
+  peer.on('disconnected',()=>{setTimeout(()=>{try{peer.reconnect()}catch(e){}},1500)});
+}
+$('joinBtn').onclick=()=>join($('jCode').value);
+$('jCode').addEventListener('keydown',e=>{if(e.key==='Enter')join($('jCode').value)});
+
+// arriving from an invite link
+const qp=new URLSearchParams(location.search).get('room');
+if(qp){
+  $('jCode').value=qp.toUpperCase();
+  $('landing').querySelector('.lead').textContent='You’ve been invited to a movie night. Add your name and jump in.';
+  $('hostBtn').closest('.card').style.display='none';
+  const card=$('jCode').closest('.card');
+  card.insertAdjacentHTML('afterbegin','<div class="row" style="margin-bottom:10px"><input type="text" id="gName" maxlength="24" placeholder="Your name" autocomplete="nickname"></div>');
+  $('gName').value=myName;
+  $('joinBtn').textContent='Join the party';$('joinBtn').classList.remove('ghost');
+  $('joinBtn').onclick=()=>{myName=$('gName').value.trim().slice(0,24)||'Guest';store.set('wt-name',myName);join($('jCode').value)};
+}
+if(typeof Peer==='undefined')note('Couldn’t load the connection library. Check your internet and refresh.');
+window.addEventListener('beforeunload',()=>{try{peer&&peer.destroy()}catch(e){}});
+}
+</script>
+</body>
+</html>
